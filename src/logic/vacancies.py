@@ -1,12 +1,10 @@
 import threading
 import datetime
 
-
-from logic.api_hh_connect import APIHHConnect
-from logic.jsons import JSONs
-from logic.logger import Logger
-from logic.id_storage import IdStorage
-
+from src.logic.api_hh_connect import connect
+from src.logic.jsons import JSONs
+from src.logic.logger import Logger
+from src.logic.id_storage import IdStorage
 
 
 class Vacancies:
@@ -52,16 +50,20 @@ class Vacancies:
         today = datetime.datetime(now.year, now.month, now.day, 0, 0)  # сегодня в 00:00:00
         date_from = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
         date_to = today.strftime("%Y-%m-%dT%H:%M:%S")
-        params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'], 'date_from': date_from, 'date_to': date_to, 'per_page': 100}
-        vacancies = APIHHConnect.connect(query, params)
+        params = {
+            'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164',
+                                  '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
+            'date_from': date_from, 'date_to': date_to, 'per_page': 100}
+        vacancies = connect(query, params)
         founded = vacancies['found']
         Logger.warning_check_all(f"Founded {founded} vacancies")
         if founded > 2000:
             self.separating_by_days(query, params, today, days)
         else:
             self.check_pages(query, params)
-            Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
-        
+            Logger.warning_check_all(
+                f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
+
         date = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
         IdStorage.update_vacancies_dict(date)
         IdStorage.update_vacancies_dict(date)
@@ -80,7 +82,7 @@ class Vacancies:
             params['date_to'] = (today - datetime.timedelta(days=days_ago)).strftime("%Y-%m-%dT%H:%M:%S")
             params['date_from'] = (today - datetime.timedelta(days=days_ago + 1)).strftime("%Y-%m-%dT%H:%M:%S")
             params['page'] = None
-            vacancies = APIHHConnect.connect(query, params)
+            vacancies = connect(query, params)
             founded = vacancies['found']
             Logger.warning_check_all(f"{params['date_from'][:10]} founded {founded} vacancies")
             cur_day = today - datetime.timedelta(days=days_ago)
@@ -99,7 +101,9 @@ class Vacancies:
         :return: продолжение программы.
         """
         for hour in range(0, 24):
-            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
+            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96',
+                                            '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124',
+                                            '125', '126'],
                       'per_page': 100,
                       'date_from': (cur_day - datetime.timedelta(hours=hour + 1)).strftime("%Y-%m-%dT%H:%M:%S"),
                       'date_to': (cur_day - datetime.timedelta(hours=hour)).strftime("%Y-%m-%dT%H:%M:%S")}
@@ -115,7 +119,9 @@ class Vacancies:
         """
         threads = []
         for x in range(4):
-            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
+            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96',
+                                            '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124',
+                                            '125', '126'],
                       'per_page': 100,
                       'date_from': (cur_day - datetime.timedelta(hours=hour + x + 1)).strftime("%Y-%m-%dT%H:%M:%S"),
                       'date_to': (cur_day - datetime.timedelta(hours=hour + x)).strftime("%Y-%m-%dT%H:%M:%S")}
@@ -133,13 +139,13 @@ class Vacancies:
         :param params: параметры
         :return: продолжение программы
         """
-        vacancies = APIHHConnect.connect(query, params)
+        vacancies = connect(query, params)
         if vacancies['found'] > 2000:
             # Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded more than 2000 vacancies!")
             self.query_by_minutes(query, params)
         else:
             self.check_pages(query, params)
-        
+
     def query_by_minutes(self, query, params):
         prev_date_to = params['date_to']
         prev_date_from = params['date_from']
@@ -148,8 +154,8 @@ class Vacancies:
             if i == 5:
                 params['date_to'] = prev_date_to
             else:
-                params['date_to'] = prev_date_from[:-5] + str(i+1) + prev_date_from[-4:]
-            vacancies = APIHHConnect.connect(query, params)
+                params['date_to'] = prev_date_from[:-5] + str(i + 1) + prev_date_from[-4:]
+            vacancies = connect(query, params)
             if vacancies['found'] > 2000:
                 date_to_save = params['date_to']
                 params['date_to'] = prev_date_from[:-5] + str(i) + '5' + prev_date_from[-3:]
@@ -160,7 +166,8 @@ class Vacancies:
             else:
                 self.check_pages(query, params)
 
-    def check_pages(self, query, params):
+    @staticmethod
+    def check_pages(query, params):
         """
         Выполнение запросов меняя параметр page
         :param query: запрос
@@ -168,9 +175,10 @@ class Vacancies:
         :return: продолжение программы
         """
         params['page'] = None
-        vacancies = APIHHConnect.connect(query, params)
-        
-        Logger.info_check_all(f"From {params['date_from']} to {params['date_to']} founded {vacancies['found']} vacancies")
+        vacancies = connect(query, params)
+
+        Logger.info_check_all(
+            f"From {params['date_from']} to {params['date_to']} founded {vacancies['found']} vacancies")
         try:
             pages = vacancies['found'] // 100
         except:
@@ -179,7 +187,7 @@ class Vacancies:
         if pages > 0:
             for i in range(pages + 1):
                 params['page'] = i
-                vacancies = APIHHConnect.connect(query, params)
+                vacancies = connect(query, params)
                 JSONs.save_group_vacancies_json(vacancies, params)
         else:
             JSONs.save_group_vacancies_json(vacancies, params)

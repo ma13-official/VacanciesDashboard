@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 
+
 class JSONSQLDownloader:
     prefix = "hh.ru/vacancies_jsons/"
     drop = """
@@ -73,76 +74,76 @@ class JSONSQLDownloader:
     """
 
     columns = ["hhid",
-            "premium",
-            "billing_type",
-            "relations", #JSON ARRAY
-            "relations_size",
-            "name",
-            "insider_interview",
-            "response_letter_required",
-            "area",
-            "salary",
-            "type",
-            "address",
-            "allow_messages", 
-            "experience",
-            "schedule",
-            "employment",
-            "department",
-            "contacts",
-            "description", 
-            "branded_description", 
-            "vacancy_constructor_template", 
-            "key_skills",
-            "key_skills_size",
-            "accept_handicapped",
-            "accept_kids",
-            "archived",
-            "response_url",
-            "specializations", #JSON ARRAY
-            "specializations_size",
-            "professional_roles", #JSON ARRAY
-            "professional_roles_size",
-            "code",
-            "hidden",
-            "quick_responses_allowed",
-            "driver_license_types", #JSON ARRAY
-            "driver_license_types_size",
-            "accept_incomplete_resumes",
-            "employer",
-            "published_at",
-            "created_at",
-            "initial_created_at",
-            "negotiations_url",
-            "suitable_resumes_url",
-            "apply_alternate_url",
-            "has_test",
-            "test",
-            "alternate_url",
-            "working_days", #JSON ARRAY
-            "working_days_size",
-            "working_time_intervals", #JSON ARRAY
-            "working_time_intervals_size",
-            "working_time_modes", #JSON ARRAY
-            "working_time_modes_size",
-            "accept_temporary",
-            "languages", #JSON ARRAY
-            "languages_size"
-            ]
+               "premium",
+               "billing_type",
+               "relations",  # JSON ARRAY
+               "relations_size",
+               "name",
+               "insider_interview",
+               "response_letter_required",
+               "area",
+               "salary",
+               "type",
+               "address",
+               "allow_messages",
+               "experience",
+               "schedule",
+               "employment",
+               "department",
+               "contacts",
+               "description",
+               "branded_description",
+               "vacancy_constructor_template",
+               "key_skills",
+               "key_skills_size",
+               "accept_handicapped",
+               "accept_kids",
+               "archived",
+               "response_url",
+               "specializations",  # JSON ARRAY
+               "specializations_size",
+               "professional_roles",  # JSON ARRAY
+               "professional_roles_size",
+               "code",
+               "hidden",
+               "quick_responses_allowed",
+               "driver_license_types",  # JSON ARRAY
+               "driver_license_types_size",
+               "accept_incomplete_resumes",
+               "employer",
+               "published_at",
+               "created_at",
+               "initial_created_at",
+               "negotiations_url",
+               "suitable_resumes_url",
+               "apply_alternate_url",
+               "has_test",
+               "test",
+               "alternate_url",
+               "working_days",  # JSON ARRAY
+               "working_days_size",
+               "working_time_intervals",  # JSON ARRAY
+               "working_time_intervals_size",
+               "working_time_modes",  # JSON ARRAY
+               "working_time_modes_size",
+               "accept_temporary",
+               "languages",  # JSON ARRAY
+               "languages_size"
+               ]
     clmn_sql = tuple(columns)
 
-    records_list_template ='('+','.join(['%s'] * len(columns)) + ')'
-    insert_query ='INSERT INTO vacancy VALUES {}'.format(records_list_template)
+    records_list_template = '(' + ','.join(['%s'] * len(columns)) + ')'
+    insert_query = 'INSERT INTO vacancy VALUES {}'.format(records_list_template)
 
     @classmethod
     def connect_to_db(cls):
         try:
             # Connect to an existing database
             cls.connection = psycopg2.connect(user=load_dotenv("DB_NAME"),
-                                        password=load_dotenv("DB_PASSWORD"),
-                                        host=load_dotenv("DB_HOST"),
-                                        port=load_dotenv("DB_PORT"),
-                                        database=load_dotenv("DB"))
+                                              password=load_dotenv("DB_PASSWORD"),
+                                              host=load_dotenv("DB_HOST"),
+                                              port=load_dotenv("DB_PORT"),
+                                              database=load_dotenv("DB"))
 
             # Create a cursor to perform database operations
             cursor = cls.connection.cursor()
@@ -153,7 +154,7 @@ class JSONSQLDownloader:
             cursor.execute("SELECT version();")
             cls.connection.commit()
             print("You are connected!")
-            
+
             print()
 
         except (Exception, Error) as error:
@@ -161,44 +162,44 @@ class JSONSQLDownloader:
 
     def prep_vals(content):
         res = []
-        bool_vals = ['premium','response_letter_required', 
-                    'allow_messages', 'accept_handicapped', 
-                    'accept_kids', 'archived', 'hidden', 
-                    'quick_responses_allowed', 'accept_incomplete_resumes', 
-                    'has_test', 'accept_temporary']
+        bool_vals = ['premium', 'response_letter_required',
+                     'allow_messages', 'accept_handicapped',
+                     'accept_kids', 'archived', 'hidden',
+                     'quick_responses_allowed', 'accept_incomplete_resumes',
+                     'has_test', 'accept_temporary']
         int_vals = ['id']
         text_vals = ['description', 'apply_alternate_url', 'alternate_url', 'name']
         json_vals = ['billing_type',
-                    'relations',
-                    'insider_interview',
-                    'area',
-                    'salary',
-                    'type',
-                    'address',
-                    'experience',
-                    'schedule',
-                    'employment',
-                    'department',
-                    'contacts',
-                    'branded_description',
-                    'vacancy_constructor_template',
-                    'key_skills',
-                    'response_url',
-                    'specializations',
-                    'professional_roles',
-                    'code',
-                    'driver_license_types',
-                    'employer',
-                    'negotiations_url',
-                    'suitable_resumes_url',
-                    'test',
-                    'working_days',
-                    'working_time_intervals',
-                    'working_time_modes',
-                    'languages']
+                     'relations',
+                     'insider_interview',
+                     'area',
+                     'salary',
+                     'type',
+                     'address',
+                     'experience',
+                     'schedule',
+                     'employment',
+                     'department',
+                     'contacts',
+                     'branded_description',
+                     'vacancy_constructor_template',
+                     'key_skills',
+                     'response_url',
+                     'specializations',
+                     'professional_roles',
+                     'code',
+                     'driver_license_types',
+                     'employer',
+                     'negotiations_url',
+                     'suitable_resumes_url',
+                     'test',
+                     'working_days',
+                     'working_time_intervals',
+                     'working_time_modes',
+                     'languages']
         date_vals = ['published_at', 'created_at', 'initial_created_at']
         date_format = '%Y-%m-%dT%H:%M:%S%z'
-        
+
         for key, val in content.items():
             if key in int_vals:
                 new_type = int(val)
@@ -231,8 +232,8 @@ class JSONSQLDownloader:
                 res.append(new_type)
 
         # checking that new keys and vals are matching together
-        #res_dict = {k: v for k, v in zip(columns, res)}
-        
+        # res_dict = {k: v for k, v in zip(columns, res)}
+
         return res
 
     @classmethod
@@ -245,7 +246,7 @@ class JSONSQLDownloader:
 
         with open('/home/collector/VacanciesDashboard/errors_in_vacj.json', 'r') as f:
             errors = json.load(f)
-        
+
         vals = cls.prep_vals(json_content)
         try:
             cursor.execute(f"SELECT EXISTS (SELECT * FROM vacancy WHERE hhid = {json_content['id']});")

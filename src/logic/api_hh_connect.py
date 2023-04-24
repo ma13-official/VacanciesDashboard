@@ -3,51 +3,49 @@ import requests
 import time
 
 from datetime import datetime
-from logic.logger import Logger
-from settings.config import Local
-from logic.captcha_solver import solve
+from src.logic.logger import Logger
+from src.settings.config import Local
+from src.logic.captcha_solver import solve
 
 
-class APIHHConnect:
-    @staticmethod
-    def connect(query, params=None):
-        if params is None:
-            params = {}
-        if not query.startswith("https://api.hh.ru/"):
-            url = "https://api.hh.ru/" + query
-        else:
-            url = query
-        data = requests.get(url, params).json()
-        if list(data.keys())[0] == 'errors':
-            match data['errors'][0]['type']:
-                case 'captcha_required':
-                    captcha_url = data['errors'][0]['captcha_url'] + '&backurl=' + query
+def connect(query, params=None):
+    if params is None:
+        params = {}
+    if not query.startswith("https://api.hh.ru/"):
+        url = "https://api.hh.ru/" + query
+    else:
+        url = query
+    data = requests.get(url, params).json()
+    if list(data.keys())[0] == 'errors':
+        match data['errors'][0]['type']:
+            case 'captcha_required':
+                captcha_url = data['errors'][0]['captcha_url'] + '&backurl=' + query
 
-                    with open(Local.captcha_txt, mode="a") as myfile:
-                        myfile.write(f"\n\n{datetime.now()}   {captcha_url}")
+                with open(Local.captcha_txt, mode="a") as myfile:
+                    myfile.write(f"\n\n{datetime.now()}   {captcha_url}")
 
-                    Logger.info(f"Captcha: {captcha_url}")
-                    
-                    with open(
-                            f"{Local.captcha}{data['request_id']}.json",
-                            'w', encoding='utf8') as outfile:
-                        json.dump(data, outfile, sort_keys=False, indent=4, ensure_ascii=False,
-                                separators=(',', ': '))
+                Logger.info(f"Captcha: {captcha_url}")
 
-                    solve(captcha_url)
-                    time.sleep(5)
+                with open(
+                        f"{Local.captcha}{data['request_id']}.json",
+                        'w', encoding='utf8') as outfile:
+                    json.dump(data, outfile, sort_keys=False, indent=4, ensure_ascii=False,
+                              separators=(',', ': '))
 
-                    APIHHConnect.connect(query, params)
-                case _:
-                    Logger.critical_check_all("Unexpected error!!!")
-                    with open(
-                            f"{Local.unexpected_error}{data['request_id']}.json",
-                            'w', encoding='utf8') as outfile:
-                        json.dump(data, outfile, sort_keys=False, indent=4, ensure_ascii=False,
-                                separators=(',', ': ')) 
-                    input()
-        else:
-            params['backurl'] = None
-        if 'found' not in data.keys():
-            APIHHConnect.connect(query, params)
-        return data
+                solve(captcha_url)
+                time.sleep(5)
+
+                connect(query, params)
+            case _:
+                Logger.critical_check_all("Unexpected error!!!")
+                with open(
+                        f"{Local.unexpected_error}{data['request_id']}.json",
+                        'w', encoding='utf8') as outfile:
+                    json.dump(data, outfile, sort_keys=False, indent=4, ensure_ascii=False,
+                              separators=(',', ': '))
+                input()
+    else:
+        params['backurl'] = None
+    if 'found' not in data.keys():
+        connect(query, params)
+    return data

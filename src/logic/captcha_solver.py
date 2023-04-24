@@ -3,8 +3,9 @@ import urllib.request
 
 from selenium import webdriver
 from twocaptcha import TwoCaptcha
-from logic.logger import Logger
-from settings.config import Local
+from src.logic.logger import Logger
+from src.settings.config import Local
+
 
 def solve(url):
     # инициализация веб-драйвера
@@ -30,6 +31,7 @@ def solve(url):
 
     # закрытие веб-драйвера
     driver.close()
+
 
 def image_solver(image_url, solver):
     # скачиваем изображение по URL

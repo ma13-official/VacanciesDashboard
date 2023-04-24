@@ -3,17 +3,17 @@ import os
 
 from datetime import datetime, timedelta
 from time import perf_counter as pc
-from logic.api_hh_connect import APIHHConnect
-from logic.s3 import S3
-from settings.config import Local, S3_paths
-from logic.logger import Logger
-from logic.json_sql_loader import JSONSQLDownloader
+from src.logic.api_hh_connect import connect
+from src.logic.s3 import S3
+from src.settings.config import Local, S3Paths
+from src.logic.logger import Logger
+from src.logic.json_sql_loader import JSONSQLDownloader
 
 
 class JSONs:
     vacancies_json = []
     vacancies_json_host_path = Local.vacancies_json_path
-    vacancies_json_s3_path = S3_paths.vacancies_json_path
+    vacancies_json_s3_path = S3Paths.vacancies_json_path
 
     @staticmethod
     def save_group_vacancies_json(vacancies, params):
@@ -25,7 +25,7 @@ class JSONs:
         """
         page = "" if params['page'] is None else f"---{params['page']}"
         host_path = f"{Local.group_jsons_path}{params['date_from'][:13]}{page}.json"
-        s3_path = f"{S3_paths.group_jsons_path}{params['date_from'][:10]}/{params['date_from'][:16]}{page}.json"
+        s3_path = f"{S3Paths.group_jsons_path}{params['date_from'][:10]}/{params['date_from'][:16]}{page}.json"
         if os.path.exists(host_path):
             return
         with open(host_path, 'w', encoding='utf8') as outfile:
@@ -42,10 +42,10 @@ class JSONs:
         :return: выгруженные файлы.
         """
         host_path = f'{Local.vacancies_jsons_path}{directory}/{vacancy_id}.json'
-        s3_path = f'{S3_paths.vacancies_jsons_path}{directory}/{vacancy_id}.json'
+        s3_path = f'{S3Paths.vacancies_jsons_path}{directory}/{vacancy_id}.json'
         if not os.path.exists(host_path):
             try:
-                vacancy = APIHHConnect.connect(url)
+                vacancy = connect(url)
             except Exception as e:
                 print(e)
                 input()
@@ -65,7 +65,7 @@ class JSONs:
         start = pc()
         founded, not_founded, total = 0, 0, 0
         for i in range(number_of_days):
-            key = (datetime.today() - timedelta(days=1+i)).strftime('%Y-%m-%d')
+            key = (datetime.today() - timedelta(days=1 + i)).strftime('%Y-%m-%d')
             arr = vacancies_dict[key]
             JSONs.make_dir(f'{Local.vacancies_jsons_path}', key)
             Logger.warning_upload(f"{key} started uploading, {len(arr)} JSONs founded")

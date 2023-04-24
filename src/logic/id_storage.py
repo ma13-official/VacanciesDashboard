@@ -1,8 +1,9 @@
 import json
-from logic.s3 import S3
+from src.logic.s3 import S3
 from datetime import datetime, timedelta
-from logic.logger import Logger
-from settings.config import Local, S3_paths
+from src.logic.logger import Logger
+from src.settings.config import Local, S3Paths
+
 
 class IdStorage:
     vacancies_dict = json.load(open(Local.vacancies_json_path))
@@ -54,7 +55,7 @@ class IdStorage:
         new_dict = cls.zip_arr_and_dict(new_values, vacancies_dict)
         with open(Local.vacancies_json_path, "w") as file:
             json.dump(dict(sorted(new_dict.items())), file, indent=4)
-            
+
     @staticmethod
     def remove_duplicates(arr):
         arr = reversed(arr)
@@ -84,7 +85,7 @@ class IdStorage:
         s3_storage = dict()
 
         for date in dates:
-            prefix = S3_paths.vacancies_jsons_path + f'{date}/'
+            prefix = S3Paths.vacancies_jsons_path + f'{date}/'
             s3_storage[date] = cls.get_all_objects(prefix)
 
         items_in_s3 = sum([len(sub) for sub in s3_storage.values()])
@@ -94,14 +95,14 @@ class IdStorage:
 
     @staticmethod
     def get_dates_list(start_date):
-        end_date=datetime.now().date()-timedelta(days=1)
+        end_date = datetime.now().date() - timedelta(days=1)
         dates_list = []
         current_date = start_date
         while current_date <= end_date:
             dates_list.append(current_date.strftime("%Y-%m-%d"))
             current_date += timedelta(days=1)
         return dates_list
-    
+
     @staticmethod
     def get_all_objects(prefix):
         files_in_dir = []
@@ -160,8 +161,8 @@ class IdStorage:
         Logger.info_check_all(f'There are {len(moves)} differencies.')
 
         for move in moves:
-            src_file = S3_paths.vacancies_jsons_path + move[0] + '/' + move[2] + '.json'
-            dst_file = S3_paths.vacancies_jsons_path + move[1] + '/' + move[2] + '.json'
+            src_file = S3Paths.vacancies_jsons_path + move[0] + '/' + move[2] + '.json'
+            dst_file = S3Paths.vacancies_jsons_path + move[1] + '/' + move[2] + '.json'
 
             S3.s3.copy_object(Bucket=S3.bucket, CopySource={"Bucket": S3.bucket, "Key": src_file}, Key=dst_file)
             S3.s3.delete_object(Bucket=S3.bucket, Key=src_file)
@@ -176,6 +177,6 @@ class IdStorage:
         cls.making_dict_of_ids(date)
         Logger.warning_check_all("vacancies_dict.json updated.")
         cls.deleting_duplicates()
-        Logger.warning_check_all("Duplicates deleted.") 
+        Logger.warning_check_all("Duplicates deleted.")
         cls.move_files_in_s3()
         Logger.warning_check_all("Files in s3 moved.")

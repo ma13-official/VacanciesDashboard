@@ -1,17 +1,17 @@
 import datetime
 import logging
 
-from settings.config import Local, S3_paths, Vacancies_paths, Logger_settings
-from logic.s3 import S3
+from src.settings.config import Local, S3Paths, VacanciesPaths, LoggerSettings
+from src.logic.s3 import S3
 
 
 class Logger:
-    check_all=Vacancies_paths.start_check_all
-    number_of_days=Vacancies_paths.start_number_of_days_checking
-    upload_jsons=Vacancies_paths.start_upload_jsons
+    check_all = VacanciesPaths.start_check_all
+    number_of_days = VacanciesPaths.start_number_of_days_checking
+    upload_jsons = VacanciesPaths.start_upload_jsons
 
-    detailed = Logger_settings.detailed
-    default = Logger_settings.default
+    detailed = LoggerSettings.detailed
+    default = LoggerSettings.default
 
     detailed_check_all_logger = logging.getLogger('dc')
     detailed_upload_logger = logging.getLogger('du')
@@ -23,6 +23,7 @@ class Logger:
     name3 = f"group/{datetime.datetime.today().strftime('%Y-%m-%dT%H--%M--%S')}.log"
     name4 = f"single/{datetime.datetime.today().strftime('%Y-%m-%dT%H--%M--%S')}.log"
 
+    @staticmethod
     def create():
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -62,6 +63,7 @@ class Logger:
                 Logger.upload_logger.addHandler(fh4)
                 Logger.upload_logger.info("Upload of single vacancies JSONs started.")
 
+    @staticmethod
     def create_for_upload():
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
@@ -79,6 +81,7 @@ class Logger:
         Logger.upload_logger.addHandler(fh4)
         Logger.upload_logger.info("Upload of single vacancies JSONs started.")
 
+    @staticmethod
     def info(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.info(message)
@@ -87,79 +90,96 @@ class Logger:
             Logger.check_all_logger.info(message)
             Logger.upload_logger.info(message)
 
+    @staticmethod
     def info_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.info(message)
+        if Logger.default:
+            Logger.check_all_logger.info(message)
 
+    @staticmethod
     def info_upload(message):
         if Logger.detailed:
             Logger.detailed_upload_logger.info(message)
+        if Logger.default:
+            Logger.upload_logger.info(message)
 
+    @staticmethod
     def warning(message):
         if Logger.detailed:
-            Logger.detailed_check_all_logger.warning(message)
-            Logger.detailed_upload_logger.warning(message)
+            Logger.warning_check_all(message)
+            Logger.warning_upload(message)
         if Logger.default:
             Logger.check_all_logger.warning(message)
             Logger.upload_logger.warning(message)
 
+    @staticmethod
     def warning_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.warning(message)
         if Logger.default:
             Logger.check_all_logger.warning(message)
 
+    @staticmethod
     def warning_upload(message):
         if Logger.detailed:
             Logger.detailed_upload_logger.warning(message)
         if Logger.default:
             Logger.upload_logger.warning(message)
 
+    @staticmethod
     def error(message):
         if Logger.detailed:
-            Logger.detailed_check_all_logger.error(message, exc_info=True)
-            Logger.detailed_upload_logger.error(message, exc_info=True)
+            Logger.error_check_all(message)
+            Logger.error_upload(message)
         if Logger.default:
             Logger.check_all_logger.error(message, exc_info=True)
             Logger.upload_logger.error(message, exc_info=True)
 
+    @staticmethod
     def error_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.error(message, exc_info=True)
         if Logger.default:
             Logger.check_all_logger.error(message, exc_info=True)
 
+    @staticmethod
     def error_upload(message):
         if Logger.detailed:
             Logger.detailed_upload_logger.error(message, exc_info=True)
         if Logger.default:
             Logger.upload_logger.error(message, exc_info=True)
-        
+
+    @staticmethod
     def critical_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.critical(message)
         if Logger.default:
             Logger.check_all_logger.critical(message)
 
+    @staticmethod
     def save():
         if Logger.detailed:
             if Logger.check_all:
-                S3.upload_without_remove(Local.logs_path + Logger.name1, S3_paths.logs_path + Logger.name1)
-                
+                S3.upload_without_remove(Local.logs_path + Logger.name1, S3Paths.logs_path + Logger.name1)
+
             if Logger.upload_jsons:
-                S3.upload_without_remove(Local.logs_path + Logger.name2, S3_paths.logs_path + Logger.name2)
+                S3.upload_without_remove(Local.logs_path + Logger.name2, S3Paths.logs_path + Logger.name2)
 
         if Logger.default:
             if Logger.check_all:
-                S3.upload_without_remove(Local.logs_path + Logger.name3, S3_paths.logs_path + Logger.name3)
-                
+                S3.upload_without_remove(Local.logs_path + Logger.name3, S3Paths.logs_path + Logger.name3)
+
             if Logger.upload_jsons:
-                S3.upload_without_remove(Local.logs_path + Logger.name4, S3_paths.logs_path + Logger.name4)
-                
+                S3.upload_without_remove(Local.logs_path + Logger.name4, S3Paths.logs_path + Logger.name4)
+
 
 class EasyLogger:
+    @staticmethod
     def create(name):
-        logging.basicConfig(level=logging.INFO, filename=name, filemode="w", format="%(asctime)s %(levelname)s %(message)s")
+        logging.basicConfig(level=logging.INFO, filename=name, filemode="w",
+                            format="%(asctime)s %(levelname)s %(message)s")
 
+    @staticmethod
     def info(message):
         logging.info(message)

@@ -1,16 +1,15 @@
 import os
 import boto3
 
-from settings.config import S3_paths
+from src.settings.config import S3Paths
 
 
 class S3:
-    bucket = S3_paths.bucket
-    profile = S3_paths.profile
-    vacancies_json_path = S3_paths.vacancies_json_path
+    bucket = S3Paths.bucket
+    profile = S3Paths.profile
+    vacancies_json_path = S3Paths.vacancies_json_path
     session = boto3.session.Session()
     s3 = session.client(service_name='s3', endpoint_url='https://storage.yandexcloud.net')
-    
 
     @staticmethod
     def upload(host_path, s3_path):
