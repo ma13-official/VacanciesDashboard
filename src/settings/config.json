@@ -1,0 +1,34 @@
+{
+    "local": {
+        "path": "/home/collector/VacanciesDashboard/",
+        "logs_path": "etc/logs/",
+        "single_jsons_path": "etc/single_jsons/",
+        "group_jsons_path": "etc/group_jsons/",
+        "errors_path": "etc/errors/",
+        "captcha": "captcha/",
+        "unexpected_error": "unexpected_error/",
+        "vacancies_json": "vacancies.json",
+        "captcha_images": "etc/captcha_images/",
+        "captcha_txt": "etc/captcha.txt"
+    },
+    "s3":{
+        "path": "hh.ru/",
+        "logs_path": "logs/",
+        "vacancies_jsons_path": "vacancies_jsons/",
+        "group_jsons_path": "group_jsons/",
+        "bucket": "data-brains-bucket",
+        "profile": "default",
+        "vacancies_json": "vacancies.json"
+    },
+    "vacancies":{
+        "start":{
+            "check_all": true,
+            "upload_jsons": false,
+            "number_of_days_checking": 1
+        }
+    },
+    "logger":{
+        "detailed": true,
+        "default": true
+    }
+}
