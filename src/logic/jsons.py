@@ -3,11 +3,11 @@ import os
 
 from datetime import datetime, timedelta
 from time import perf_counter as pc
-from src.logic.api_hh_connect import connect
-from src.logic.s3 import S3
-from src.settings.config import Local, S3Paths
-from src.logic.logger import Logger
-from src.logic.json_sql_loader import JSONSQLDownloader
+from logic.api_hh_connect import connect
+from logic.s3 import S3
+from settings.config import Local, S3Paths
+from logic.logger import Logger
+from logic.json_sql_loader import JSONSQLDownloader
 
 
 class JSONs:
@@ -41,8 +41,8 @@ class JSONs:
         :param vacancy_id: имя файла
         :return: выгруженные файлы.
         """
-        host_path = f'{Local.vacancies_jsons_path}{directory}/{vacancy_id}.json'
-        s3_path = f'{S3Paths.vacancies_jsons_path}{directory}/{vacancy_id}.json'
+        host_path = f'{Local.vacancies_json_path}{directory}/{vacancy_id}.json'
+        s3_path = f'{S3Paths.vacancies_json_path}{directory}/{vacancy_id}.json'
         if not os.path.exists(host_path):
             try:
                 vacancy = connect(url)
@@ -57,7 +57,7 @@ class JSONs:
 
     @staticmethod
     def json_upload(number_of_days):
-        with open('vacancies_dict.json', 'r') as f:
+        with open('/home/collector/VacanciesDashboard/vacancies.json', 'r') as f:
             vacancies_dict = json.load(f)
 
         JSONSQLDownloader.connect_to_db()
@@ -67,13 +67,14 @@ class JSONs:
         for i in range(number_of_days):
             key = (datetime.today() - timedelta(days=1 + i)).strftime('%Y-%m-%d')
             arr = vacancies_dict[key]
-            JSONs.make_dir(f'{Local.vacancies_jsons_path}', key)
+            JSONs.make_dir(f'{Local.group_jsons_path}', key)
             Logger.warning_upload(f"{key} started uploading, {len(arr)} JSONs founded")
             cur_not_founded = 0
             for value in arr:
                 total += 1
                 file_name = f'hh.ru/vacancies_jsons/{key}/{value}.json'
                 url = f'https://api.hh.ru/vacancies/{value}?host=hh.ru '
+
                 try:
                     S3.s3.head_object(Bucket=S3.bucket, Key=file_name)
                     founded += 1
@@ -85,6 +86,7 @@ class JSONs:
                     else:
                         Logger.info_upload(f'{value} {not_founded} {founded} {pc() - start}')
                     JSONs.upload_single_jsons(url, key, value)
+                    
                 print(total, founded, not_founded, end='\r', flush=True)
             Logger.warning_upload(f"{key} uploaded, {cur_not_founded} JSONs downloaded")
 

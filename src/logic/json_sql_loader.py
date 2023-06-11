@@ -3,7 +3,7 @@ from psycopg2 import Error
 import json
 import re
 from datetime import datetime
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 
 
 class JSONSQLDownloader:
@@ -139,11 +139,11 @@ class JSONSQLDownloader:
     def connect_to_db(cls):
         try:
             # Connect to an existing database
-            cls.connection = psycopg2.connect(user=load_dotenv("DB_NAME"),
-                                              password=load_dotenv("DB_PASSWORD"),
-                                              host=load_dotenv("DB_HOST"),
-                                              port=load_dotenv("DB_PORT"),
-                                              database=load_dotenv("DB"))
+            cls.connection = psycopg2.connect(user=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_NAME"],
+                                              password=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_PASSWORD"],
+                                              host=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_HOST"],
+                                              port=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_PORT"],
+                                              database=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB"])
 
             # Create a cursor to perform database operations
             cursor = cls.connection.cursor()

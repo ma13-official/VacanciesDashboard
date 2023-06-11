@@ -3,8 +3,8 @@ import sys
 sys.path.append('/home/collector/VacanciesDashboard/src')
 
 from time import perf_counter as pc
-from src.logic.jsons import JSONs
-from src.logic.logger import Logger
+from logic.jsons import JSONs
+from logic.logger import Logger
 
 
 def start():

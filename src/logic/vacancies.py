@@ -1,13 +1,15 @@
 import threading
 import datetime
 
-from src.logic.api_hh_connect import connect
-from src.logic.jsons import JSONs
-from src.logic.logger import Logger
-from src.logic.id_storage import IdStorage
+from logic.api_hh_connect import connect
+from logic.jsons import JSONs
+from logic.logger import Logger
+from logic.id_storage import IdStorage
 
 
 class Vacancies:
+    connect_counter = 0
+
     """
     Класс Vacancies представляет собой работу с API HH.ru.
     Создан для сбора информации о вакансиях на сайте HH.ru и последующего её анализа.
@@ -37,7 +39,7 @@ class Vacancies:
     Планируется реализация многопоточности для того, чтобы отправлять несколько запросов одновременно.
     """
 
-    def check_all(self, days):
+    def check_all(self, days, now = datetime.date.today()):
         """
         Метод делает запрос с параметрами даты от "$days дней назад" до сегодняшнего числа.
         Если вакансий за этот период больше 2000, то программа отправляется в метод separating_by_days.
@@ -46,7 +48,6 @@ class Vacancies:
         :return: продолжение программы
         """
         query = "vacancies"
-        now = datetime.date.today()  # сегодняшняя дата
         today = datetime.datetime(now.year, now.month, now.day, 0, 0)  # сегодня в 00:00:00
         date_from = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
         date_to = today.strftime("%Y-%m-%dT%H:%M:%S")
@@ -55,6 +56,8 @@ class Vacancies:
                                   '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
             'date_from': date_from, 'date_to': date_to, 'per_page': 100}
         vacancies = connect(query, params)
+        # self.connect_counter += 1
+        # Logger.info_check_all(self.connect_counter)
         founded = vacancies['found']
         Logger.warning_check_all(f"Founded {founded} vacancies")
         if founded > 2000:
@@ -83,6 +86,8 @@ class Vacancies:
             params['date_from'] = (today - datetime.timedelta(days=days_ago + 1)).strftime("%Y-%m-%dT%H:%M:%S")
             params['page'] = None
             vacancies = connect(query, params)
+            # self.connect_counter += 1
+            # Logger.info_check_all(self.connect_counter)
             founded = vacancies['found']
             Logger.warning_check_all(f"{params['date_from'][:10]} founded {founded} vacancies")
             cur_day = today - datetime.timedelta(days=days_ago)
@@ -140,6 +145,8 @@ class Vacancies:
         :return: продолжение программы
         """
         vacancies = connect(query, params)
+        # self.connect_counter += 1
+        # Logger.info_check_all(self.connect_counter)
         if vacancies['found'] > 2000:
             # Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded more than 2000 vacancies!")
             self.query_by_minutes(query, params)
@@ -156,6 +163,8 @@ class Vacancies:
             else:
                 params['date_to'] = prev_date_from[:-5] + str(i + 1) + prev_date_from[-4:]
             vacancies = connect(query, params)
+            # self.connect_counter += 1
+            # Logger.info_check_all(self.connect_counter)
             if vacancies['found'] > 2000:
                 date_to_save = params['date_to']
                 params['date_to'] = prev_date_from[:-5] + str(i) + '5' + prev_date_from[-3:]
@@ -166,8 +175,7 @@ class Vacancies:
             else:
                 self.check_pages(query, params)
 
-    @staticmethod
-    def check_pages(query, params):
+    def check_pages(self, query, params):
         """
         Выполнение запросов меняя параметр page
         :param query: запрос
@@ -176,6 +184,8 @@ class Vacancies:
         """
         params['page'] = None
         vacancies = connect(query, params)
+        # self.connect_counter += 1
+        # Logger.info_check_all(self.connect_counter)
 
         Logger.info_check_all(
             f"From {params['date_from']} to {params['date_to']} founded {vacancies['found']} vacancies")
@@ -188,6 +198,8 @@ class Vacancies:
             for i in range(pages + 1):
                 params['page'] = i
                 vacancies = connect(query, params)
+                # self.connect_counter += 1
+                # Logger.info_check_all(self.connect_counter)
                 JSONs.save_group_vacancies_json(vacancies, params)
         else:
             JSONs.save_group_vacancies_json(vacancies, params)

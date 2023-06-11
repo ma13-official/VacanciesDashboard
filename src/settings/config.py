@@ -47,7 +47,7 @@ class LoggerSettings:
 
 
 for path in [Local.logs_path, Local.single_jsons_path, Local.group_jsons_path, Local.errors_path, Local.captcha,
-             Local.unexpected_error, Local.captcha_images, Logger_settings.default]:
+             Local.unexpected_error, Local.captcha_images, LoggerSettings.default]:
     if not os.path.exists(path):
         os.makedirs(path)
 

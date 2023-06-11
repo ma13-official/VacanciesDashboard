@@ -1,7 +1,7 @@
 import os
 import boto3
 
-from src.settings.config import S3Paths
+from settings.config import S3Paths
 
 
 class S3:

@@ -1,8 +1,8 @@
 import json
-from src.logic.s3 import S3
+from logic.s3 import S3
 from datetime import datetime, timedelta
-from src.logic.logger import Logger
-from src.settings.config import Local, S3Paths
+from logic.logger import Logger
+from settings.config import Local, S3Paths
 
 
 class IdStorage:
@@ -49,7 +49,7 @@ class IdStorage:
     @classmethod
     def deleting_duplicates(cls):
         vacancies_dict = json.load(open(Local.vacancies_json_path))
-        new_values = cls.remove_duplicates(vacancies_dict.values())
+        new_values = cls.remove_duplicates_from_array(vacancies_dict.values())
         duplicates = sum([len(sub) for sub in vacancies_dict.values()]) - sum([len(sub) for sub in new_values])
         Logger.info_check_all(f"{duplicates} duplicates founded.")
         new_dict = cls.zip_arr_and_dict(new_values, vacancies_dict)
@@ -57,7 +57,7 @@ class IdStorage:
             json.dump(dict(sorted(new_dict.items())), file, indent=4)
 
     @staticmethod
-    def remove_duplicates(arr):
+    def remove_duplicates_from_array(arr):
         arr = reversed(arr)
         seen = {}
         new_arr = []

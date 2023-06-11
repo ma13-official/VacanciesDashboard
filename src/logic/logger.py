@@ -1,8 +1,8 @@
 import datetime
 import logging
 
-from src.settings.config import Local, S3Paths, VacanciesPaths, LoggerSettings
-from src.logic.s3 import S3
+from settings.config import Local, S3Paths, VacanciesPaths, LoggerSettings
+from logic.s3 import S3
 
 
 class Logger:
@@ -86,23 +86,23 @@ class Logger:
         if Logger.detailed:
             Logger.detailed_check_all_logger.info(message)
             Logger.detailed_upload_logger.info(message)
-        if Logger.default:
-            Logger.check_all_logger.info(message)
-            Logger.upload_logger.info(message)
+        # if Logger.default:
+        #     Logger.check_all_logger.info(message)
+        #     Logger.upload_logger.info(message)
 
     @staticmethod
     def info_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.info(message)
-        if Logger.default:
-            Logger.check_all_logger.info(message)
+        # if Logger.default:
+        #     Logger.check_all_logger.info(message)
 
     @staticmethod
     def info_upload(message):
         if Logger.detailed:
             Logger.detailed_upload_logger.info(message)
-        if Logger.default:
-            Logger.upload_logger.info(message)
+        # if Logger.default:
+        #     Logger.upload_logger.info(message)
 
     @staticmethod
     def warning(message):
