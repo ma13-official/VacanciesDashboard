@@ -1,6 +1,8 @@
 import json, os
 
-with open('/home/collector/VacanciesDashboard/src/settings/config.json') as config:
+path = 'C:\Work\VacanciesDashboard'
+
+with open(path + '\src\settings\config.json') as config:
     config = json.load(config)
 
 
@@ -12,11 +14,13 @@ class Local:
     single_jsons_path = path + local['single_jsons_path']
     group_jsons_path = path + local['group_jsons_path']
     vacancies_json_path = path + local['vacancies_json']
+    test_json_path = path + local['test_json']
     errors_path = path + local['errors_path']
     captcha = errors_path + local['captcha']
     unexpected_error = errors_path + local['unexpected_error']
     captcha_images = path + local['captcha_images']
     captcha_txt = path + local['captcha_txt']
+    env = path + local['env_path']
 
 
 class S3Paths:

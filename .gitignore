@@ -164,3 +164,6 @@ etc/
 start
 
 vacancies.json
+
+Pipfile
+Pipfile.lock

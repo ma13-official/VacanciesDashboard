@@ -1,6 +1,6 @@
 {
     "local": {
-        "path": "/home/collector/VacanciesDashboard/",
+        "path": "C:/Work/VacanciesDashboard/",
         "logs_path": "etc/logs/",
         "single_jsons_path": "etc/single_jsons/",
         "group_jsons_path": "etc/group_jsons/",
@@ -9,7 +9,9 @@
         "unexpected_error": "unexpected_error/",
         "vacancies_json": "vacancies.json",
         "captcha_images": "etc/captcha_images/",
-        "captcha_txt": "etc/captcha.txt"
+        "captcha_txt": "etc/captcha.txt",
+        "env_path": "src/logic/.env",
+        "test_json": "test.json"
     },
     "s3":{
         "path": "hh.ru/",

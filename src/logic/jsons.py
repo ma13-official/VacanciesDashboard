@@ -3,7 +3,7 @@ import os
 
 from datetime import datetime, timedelta
 from time import perf_counter as pc
-from logic.api_hh_connect import connect
+from logic.api_hh_connect import Connector
 from logic.s3 import S3
 from settings.config import Local, S3Paths
 from logic.logger import Logger
@@ -41,11 +41,11 @@ class JSONs:
         :param vacancy_id: имя файла
         :return: выгруженные файлы.
         """
-        host_path = f'{Local.vacancies_json_path}{directory}/{vacancy_id}.json'
-        s3_path = f'{S3Paths.vacancies_json_path}{directory}/{vacancy_id}.json'
+        host_path = f'{Local.group_jsons_path}{directory}/{vacancy_id}.json'
+        s3_path = f'{S3Paths.vacancies_jsons_path}{directory}/{vacancy_id}.json'
         if not os.path.exists(host_path):
             try:
-                vacancy = connect(url)
+                vacancy = JSONs.C.connect(url)
             except Exception as e:
                 print(e)
                 input()
@@ -56,16 +56,17 @@ class JSONs:
         S3.upload(host_path, s3_path)
 
     @staticmethod
-    def json_upload(number_of_days):
-        with open('/home/collector/VacanciesDashboard/vacancies.json', 'r') as f:
+    def json_upload(number_of_days, today=datetime.today()):
+        with open(Local.test_json_path, 'r') as f:
             vacancies_dict = json.load(f)
 
         JSONSQLDownloader.connect_to_db()
+        JSONs.C = Connector()
 
         start = pc()
         founded, not_founded, total = 0, 0, 0
         for i in range(number_of_days):
-            key = (datetime.today() - timedelta(days=1 + i)).strftime('%Y-%m-%d')
+            key = (today - timedelta(days=1 + i)).strftime('%Y-%m-%d')
             arr = vacancies_dict[key]
             JSONs.make_dir(f'{Local.group_jsons_path}', key)
             Logger.warning_upload(f"{key} started uploading, {len(arr)} JSONs founded")

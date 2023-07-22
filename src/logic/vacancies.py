@@ -1,14 +1,14 @@
 import threading
 import datetime
 
-from logic.api_hh_connect import connect
+from logic.api_hh_connect import Connector
 from logic.jsons import JSONs
 from logic.logger import Logger
 from logic.id_storage import IdStorage
 
 
 class Vacancies:
-    connect_counter = 0
+    
 
     """
     Класс Vacancies представляет собой работу с API HH.ru.
@@ -55,9 +55,11 @@ class Vacancies:
             'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164',
                                   '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
             'date_from': date_from, 'date_to': date_to, 'per_page': 100}
-        vacancies = connect(query, params)
-        # self.connect_counter += 1
-        # Logger.info_check_all(self.connect_counter)
+
+        self.C = Connector()
+
+        vacancies = self.C.connect(query, params)
+
         founded = vacancies['found']
         Logger.warning_check_all(f"Founded {founded} vacancies")
         if founded > 2000:
@@ -68,8 +70,8 @@ class Vacancies:
                 f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
 
         date = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-        IdStorage.update_vacancies_dict(date)
-        IdStorage.update_vacancies_dict(date)
+        # IdStorage.update_vacancies_dict(date)
+        # IdStorage.update_vacancies_dict(date)
 
     def separating_by_days(self, query, params, today, days):
         """
@@ -85,9 +87,8 @@ class Vacancies:
             params['date_to'] = (today - datetime.timedelta(days=days_ago)).strftime("%Y-%m-%dT%H:%M:%S")
             params['date_from'] = (today - datetime.timedelta(days=days_ago + 1)).strftime("%Y-%m-%dT%H:%M:%S")
             params['page'] = None
-            vacancies = connect(query, params)
-            # self.connect_counter += 1
-            # Logger.info_check_all(self.connect_counter)
+            vacancies = self.C.connect(query, params)
+
             founded = vacancies['found']
             Logger.warning_check_all(f"{params['date_from'][:10]} founded {founded} vacancies")
             cur_day = today - datetime.timedelta(days=days_ago)
@@ -144,9 +145,8 @@ class Vacancies:
         :param params: параметры
         :return: продолжение программы
         """
-        vacancies = connect(query, params)
-        # self.connect_counter += 1
-        # Logger.info_check_all(self.connect_counter)
+        vacancies = self.C.connect(query, params)
+        
         if vacancies['found'] > 2000:
             # Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded more than 2000 vacancies!")
             self.query_by_minutes(query, params)
@@ -162,9 +162,8 @@ class Vacancies:
                 params['date_to'] = prev_date_to
             else:
                 params['date_to'] = prev_date_from[:-5] + str(i + 1) + prev_date_from[-4:]
-            vacancies = connect(query, params)
-            # self.connect_counter += 1
-            # Logger.info_check_all(self.connect_counter)
+            vacancies = self.C.connect(query, params)
+
             if vacancies['found'] > 2000:
                 date_to_save = params['date_to']
                 params['date_to'] = prev_date_from[:-5] + str(i) + '5' + prev_date_from[-3:]
@@ -183,10 +182,8 @@ class Vacancies:
         :return: продолжение программы
         """
         params['page'] = None
-        vacancies = connect(query, params)
-        # self.connect_counter += 1
-        # Logger.info_check_all(self.connect_counter)
-
+        vacancies = self.C.connect(query, params)
+        
         Logger.info_check_all(
             f"From {params['date_from']} to {params['date_to']} founded {vacancies['found']} vacancies")
         try:
@@ -197,9 +194,8 @@ class Vacancies:
         if pages > 0:
             for i in range(pages + 1):
                 params['page'] = i
-                vacancies = connect(query, params)
-                # self.connect_counter += 1
-                # Logger.info_check_all(self.connect_counter)
+                vacancies = self.C.connect(query, params)
+                
                 JSONs.save_group_vacancies_json(vacancies, params)
         else:
             JSONs.save_group_vacancies_json(vacancies, params)

@@ -1,6 +1,7 @@
 import sys
+import datetime
 
-sys.path.append('/home/collector/VacanciesDashboard/src')
+sys.path.append('C:\Work\VacanciesDashboard\src')
 
 from time import perf_counter as pc
 from logic.jsons import JSONs
@@ -14,7 +15,7 @@ def start():
     start = pc()
     number_of_days = 1
     Logger.create_for_upload()
-    JSONs.json_upload(number_of_days)
+    JSONs.json_upload(number_of_days, today=datetime.datetime(2023, 6, 13))
     Logger.save()
     Logger.info(f"Program works {round(pc() - start)} seconds")
 

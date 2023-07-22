@@ -22,7 +22,7 @@ def solve(url):
         driver.close()
         return
 
-    token = dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')['2C']
+    token = dotenv_values(Local.env)['2C']
 
     solver = TwoCaptcha(token)
 

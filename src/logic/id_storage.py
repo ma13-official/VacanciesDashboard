@@ -1,6 +1,13 @@
+import sys
+import datetime
+
+# sys.path.append('C:\Work\VacanciesDashboard\src')
+
 import json
+from time import perf_counter as pc
 from logic.s3 import S3
 from datetime import datetime, timedelta
+from datetime import date as date_c
 from logic.logger import Logger
 from settings.config import Local, S3Paths
 
@@ -11,7 +18,7 @@ class IdStorage:
     @classmethod
     def making_dict_of_ids(cls, date):
         cls.adding(date)
-
+        IdStorage.date = date
         with open(Local.vacancies_json_path, "w") as file:
             json.dump(dict(sorted(cls.vacancies_dict.items())), file, indent=4)
 
@@ -81,7 +88,14 @@ class IdStorage:
     @classmethod
     def get_s3_storage(cls):
         start_date = datetime.strptime("2022-12-01", "%Y-%m-%d").date()
-        dates = cls.get_dates_list(start_date)
+
+        date = IdStorage.date
+        year = int(date[:4])
+        month = int(date[5:7])
+        day = int(date[8:])
+        end_date = date_c(year, month, day)
+        
+        dates = cls.get_dates_list(start_date, end_date)
         s3_storage = dict()
 
         for date in dates:
@@ -94,8 +108,7 @@ class IdStorage:
         return s3_storage
 
     @staticmethod
-    def get_dates_list(start_date):
-        end_date = datetime.now().date() - timedelta(days=1)
+    def get_dates_list(start_date, end_date=datetime.now().date() - timedelta(days=1)):
         dates_list = []
         current_date = start_date
         while current_date <= end_date:
@@ -175,8 +188,13 @@ class IdStorage:
     @classmethod
     def update_vacancies_dict(cls, date):
         cls.making_dict_of_ids(date)
-        Logger.warning_check_all("vacancies_dict.json updated.")
+        # Logger.warning_check_all("vacancies_dict.json updated.")
         cls.deleting_duplicates()
-        Logger.warning_check_all("Duplicates deleted.")
+        # Logger.warning_check_all("Duplicates deleted.")
         cls.move_files_in_s3()
-        Logger.warning_check_all("Files in s3 moved.")
+        # Logger.warning_check_all("Files in s3 moved.")
+
+start = pc()
+for date in IdStorage.get_dates_list(date_c(2023, 1, 24)):
+    IdStorage.update_vacancies_dict(date)
+    print(date, pc() - start)

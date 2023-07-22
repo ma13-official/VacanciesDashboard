@@ -4,6 +4,7 @@ import json
 import re
 from datetime import datetime
 from dotenv import dotenv_values
+from settings.config import Local
 
 
 class JSONSQLDownloader:
@@ -139,11 +140,11 @@ class JSONSQLDownloader:
     def connect_to_db(cls):
         try:
             # Connect to an existing database
-            cls.connection = psycopg2.connect(user=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_NAME"],
-                                              password=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_PASSWORD"],
-                                              host=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_HOST"],
-                                              port=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB_PORT"],
-                                              database=dotenv_values('/home/collector/VacanciesDashboard/src/logic/.env')["DB"])
+            cls.connection = psycopg2.connect(user=dotenv_values(Local.env)["DB_NAME"],
+                                              password=dotenv_values(Local.env)["DB_PASSWORD"],
+                                              host=dotenv_values(Local.env)["DB_HOST"],
+                                              port=dotenv_values(Local.env)["DB_PORT"],
+                                              database=dotenv_values(Local.env)["DB"])
 
             # Create a cursor to perform database operations
             cursor = cls.connection.cursor()
@@ -238,13 +239,18 @@ class JSONSQLDownloader:
 
     @classmethod
     def upload_file_to_db(cls, path):
-        with open(path, 'r') as f:
-            json_content = json.load(f)
+        with open(path, 'r', encoding='utf-8') as f:
+            try:   
+                json_content = json.load(f)
+            except Exception as e:
+                print(e)
+                print(path)
+                input()
 
         cursor = cls.connection.cursor()
         cls.connection.commit()
 
-        with open('/home/collector/VacanciesDashboard/errors_in_vacj.json', 'r') as f:
+        with open('C:\Work\VacanciesDashboard\etc\errors_in_vacj.json', 'r') as f:
             errors = json.load(f)
 
         vals = cls.prep_vals(json_content)
@@ -252,7 +258,7 @@ class JSONSQLDownloader:
             cursor.execute(f"SELECT EXISTS (SELECT * FROM vacancy WHERE hhid = {json_content['id']});")
         except Exception as e:
             errors.append((str(e), path))
-            with open('/home/collector/VacanciesDashboard/errors_in_vacj.json', 'w') as f:
+            with open('C:\Work\VacanciesDashboard\etc\errors_in_vacj.json', 'w') as f:
                 json.dump(errors, f, indent=4)
             return
         if not cursor.fetchall()[0][0]:

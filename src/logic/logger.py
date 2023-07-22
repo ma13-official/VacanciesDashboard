@@ -161,17 +161,29 @@ class Logger:
     def save():
         if Logger.detailed:
             if Logger.check_all:
-                S3.upload_without_remove(Local.logs_path + Logger.name1, S3Paths.logs_path + Logger.name1)
+                try:
+                    S3.upload_without_remove(Local.logs_path + Logger.name1, S3Paths.logs_path + Logger.name1)
+                except Exception as e:
+                    print(e)
 
             if Logger.upload_jsons:
-                S3.upload_without_remove(Local.logs_path + Logger.name2, S3Paths.logs_path + Logger.name2)
+                try:
+                    S3.upload_without_remove(Local.logs_path + Logger.name2, S3Paths.logs_path + Logger.name2)
+                except Exception as e:
+                    print(e)
 
         if Logger.default:
             if Logger.check_all:
-                S3.upload_without_remove(Local.logs_path + Logger.name3, S3Paths.logs_path + Logger.name3)
+                try:
+                    S3.upload_without_remove(Local.logs_path + Logger.name3, S3Paths.logs_path + Logger.name3)
+                except Exception as e:
+                    print(e)
 
             if Logger.upload_jsons:
-                S3.upload_without_remove(Local.logs_path + Logger.name4, S3Paths.logs_path + Logger.name4)
+                try:
+                    S3.upload_without_remove(Local.logs_path + Logger.name4, S3Paths.logs_path + Logger.name4)
+                except Exception as e:
+                    print(e)
 
 
 class EasyLogger:
