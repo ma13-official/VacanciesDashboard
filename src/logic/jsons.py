@@ -1,7 +1,7 @@
 import json
 import os
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from time import perf_counter as pc
 from logic.api_hh_connect import Connector
 from logic.s3 import S3
@@ -16,7 +16,7 @@ class JSONs:
     vacancies_json_s3_path = S3Paths.vacancies_json_path
 
     @staticmethod
-    def save_group_vacancies_json(vacancies, params):
+    def save_group_vacancies_json(vacancies, params, get_30_days=False):
         """
         Сохранение группового JSON-файла и выгрузка его в S3.
         :param vacancies: групповой JSON-файл
@@ -24,10 +24,14 @@ class JSONs:
         :return: выгруженные файлы.
         """
         page = "" if params['page'] is None else f"---{params['page']}"
-        host_path = f"{Local.group_jsons_path}{params['date_from'][:13]}{page}.json"
-        s3_path = f"{S3Paths.group_jsons_path}{params['date_from'][:10]}/{params['date_from'][:16]}{page}.json"
-        if os.path.exists(host_path):
-            return
+        if get_30_days:
+            host_path = f"{Local.group_jsons_path}{date.today()}/{params['date_from'][:13]}{page}.json"
+            s3_path = f"{S3Paths.not_archive_path}{date.today()}/{params['date_from'][:10]}/{params['date_from'][:16]}{page}.json"
+        else:
+            host_path = f"{Local.group_jsons_path}{params['date_from'][:13]}{page}.json"
+            s3_path = f"{S3Paths.group_jsons_path}{params['date_from'][:10]}/{params['date_from'][:16]}{page}.json"
+        if not os.path.exists(f"{Local.group_jsons_path}{date.today()}/"):
+            os.makedirs(f"{Local.group_jsons_path}{date.today()}/")
         with open(host_path, 'w', encoding='utf8') as outfile:
             json.dump(vacancies, outfile, sort_keys=False, indent=4, ensure_ascii=False, separators=(',', ': '))
         S3.upload(host_path, s3_path)
@@ -57,7 +61,7 @@ class JSONs:
 
     @staticmethod
     def json_upload(number_of_days, today=datetime.today()):
-        with open(Local.test_json_path, 'r') as f:
+        with open(Local.vacancies_json_path, 'r') as f:
             vacancies_dict = json.load(f)
 
         JSONSQLDownloader.connect_to_db()
@@ -65,33 +69,69 @@ class JSONs:
 
         start = pc()
         founded, not_founded, total = 0, 0, 0
+        values = []
+
         for i in range(number_of_days):
             key = (today - timedelta(days=1 + i)).strftime('%Y-%m-%d')
             arr = vacancies_dict[key]
             JSONs.make_dir(f'{Local.group_jsons_path}', key)
-            Logger.warning_upload(f"{key} started uploading, {len(arr)} JSONs founded")
+            Logger.warning_check_all(f"{key} started uploading, {len(arr)} JSONs founded")
             cur_not_founded = 0
             for value in arr:
                 total += 1
-                file_name = f'hh.ru/vacancies_jsons/{key}/{value}.json'
                 url = f'https://api.hh.ru/vacancies/{value}?host=hh.ru '
 
-                try:
-                    S3.s3.head_object(Bucket=S3.bucket, Key=file_name)
+                if JSONSQLDownloader.check_existence('vacancy', value):
                     founded += 1
-                except:
+                else:
                     not_founded += 1
                     cur_not_founded += 1
                     if not_founded % 100 == 0:
-                        Logger.warning_upload(f'{value} {not_founded} {founded} {pc() - start}')
+                        Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                     else:
-                        Logger.info_upload(f'{value} {not_founded} {founded} {pc() - start}')
+                        Logger.info_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                     JSONs.upload_single_jsons(url, key, value)
+                    values.append(value)
                     
                 print(total, founded, not_founded, end='\r', flush=True)
             Logger.warning_upload(f"{key} uploaded, {cur_not_founded} JSONs downloaded")
 
-        print(founded, not_founded, total)
+        JSONSQLDownloader.update_mv()
+        
+        return values
+
+    @staticmethod
+    def upload_from_arr(arr, key):
+        JSONSQLDownloader.connect_to_db()
+        JSONs.C = Connector()
+
+        start = pc()
+        founded, not_founded, total = 0, 0, 0
+        values = []
+
+        Logger.warning_check_all(f"Upload started, {len(arr)} JSONs founded")
+        cur_not_founded = 0
+        for value in arr:
+
+            total += 1
+            url = f'https://api.hh.ru/vacancies/{value}?host=hh.ru '
+
+            if JSONSQLDownloader.check_existence('vacancy', value):
+                founded += 1
+            else:
+                not_founded += 1
+                cur_not_founded += 1
+                if not_founded % 100 == 0:
+                    Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                else:
+                    Logger.info_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                JSONs.upload_single_jsons(url, key, value)
+                values.append(value)
+                
+        Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+
+        return values
+
 
     @staticmethod
     def make_dir(path, directory):

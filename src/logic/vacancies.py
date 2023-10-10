@@ -7,9 +7,10 @@ from logic.logger import Logger
 from logic.id_storage import IdStorage
 
 
-class Vacancies:
-    
+PROFESSIONAL_ROLES = ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126']
+VACANCIES_PER_PAGE = 100
 
+class Vacancies:
     """
     Класс Vacancies представляет собой работу с API HH.ru.
     Создан для сбора информации о вакансиях на сайте HH.ru и последующего её анализа.
@@ -39,7 +40,7 @@ class Vacancies:
     Планируется реализация многопоточности для того, чтобы отправлять несколько запросов одновременно.
     """
 
-    def check_all(self, days, now = datetime.date.today()):
+    def check_all(self, days, get_30_days = False, now = datetime.date.today()):
         """
         Метод делает запрос с параметрами даты от "$days дней назад" до сегодняшнего числа.
         Если вакансий за этот период больше 2000, то программа отправляется в метод separating_by_days.
@@ -52,11 +53,11 @@ class Vacancies:
         date_from = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
         date_to = today.strftime("%Y-%m-%dT%H:%M:%S")
         params = {
-            'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96', '164',
-                                  '104', '157', '107', '112', '113', '148', '114', '116', '121', '124', '125', '126'],
-            'date_from': date_from, 'date_to': date_to, 'per_page': 100}
+            'professional_role': PROFESSIONAL_ROLES,
+            'date_from': date_from, 'date_to': date_to, 'per_page': VACANCIES_PER_PAGE}
 
         self.C = Connector()
+        self.get_30_days = get_30_days
 
         vacancies = self.C.connect(query, params)
 
@@ -66,12 +67,7 @@ class Vacancies:
             self.separating_by_days(query, params, today, days)
         else:
             self.check_pages(query, params)
-            Logger.warning_check_all(
-                f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
-
-        date = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
-        # IdStorage.update_vacancies_dict(date)
-        # IdStorage.update_vacancies_dict(date)
+            Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
 
     def separating_by_days(self, query, params, today, days):
         """
@@ -96,6 +92,8 @@ class Vacancies:
                 self.separating_by_hours(query, cur_day)
             else:
                 self.check_pages(query, params)
+            date = (today - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+            IdStorage.static_making_dict_of_ids(date)
 
     def separating_by_hours(self, query, cur_day):
         """
@@ -107,10 +105,8 @@ class Vacancies:
         :return: продолжение программы.
         """
         for hour in range(0, 24):
-            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96',
-                                            '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124',
-                                            '125', '126'],
-                      'per_page': 100,
+            params = {'professional_role': PROFESSIONAL_ROLES,
+                      'per_page': VACANCIES_PER_PAGE,
                       'date_from': (cur_day - datetime.timedelta(hours=hour + 1)).strftime("%Y-%m-%dT%H:%M:%S"),
                       'date_to': (cur_day - datetime.timedelta(hours=hour)).strftime("%Y-%m-%dT%H:%M:%S")}
             self.query_by_hours(query, params)
@@ -125,10 +121,8 @@ class Vacancies:
         """
         threads = []
         for x in range(4):
-            params = {'professional_role': ['156', '160', '10', '12', '150', '25', '165', '34', '36', '73', '155', '96',
-                                            '164', '104', '157', '107', '112', '113', '148', '114', '116', '121', '124',
-                                            '125', '126'],
-                      'per_page': 100,
+            params = {'professional_role': PROFESSIONAL_ROLES,
+                      'per_page': VACANCIES_PER_PAGE,
                       'date_from': (cur_day - datetime.timedelta(hours=hour + x + 1)).strftime("%Y-%m-%dT%H:%M:%S"),
                       'date_to': (cur_day - datetime.timedelta(hours=hour + x)).strftime("%Y-%m-%dT%H:%M:%S")}
             t = threading.Thread(target=self.query_by_hours, args=(query, params))
@@ -148,7 +142,6 @@ class Vacancies:
         vacancies = self.C.connect(query, params)
         
         if vacancies['found'] > 2000:
-            # Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded more than 2000 vacancies!")
             self.query_by_minutes(query, params)
         else:
             self.check_pages(query, params)
@@ -195,7 +188,8 @@ class Vacancies:
             for i in range(pages + 1):
                 params['page'] = i
                 vacancies = self.C.connect(query, params)
-                
-                JSONs.save_group_vacancies_json(vacancies, params)
+                JSONs.save_group_vacancies_json(vacancies, params, get_30_days=self.get_30_days)
         else:
-            JSONs.save_group_vacancies_json(vacancies, params)
+            JSONs.save_group_vacancies_json(vacancies, params, get_30_days=self.get_30_days)
+
+        

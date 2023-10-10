@@ -4,7 +4,8 @@ import json
 import re
 from datetime import datetime
 from dotenv import dotenv_values
-from settings.config import Local
+from settings.config import Local 
+from logic.logger import Logger
 
 
 class JSONSQLDownloader:
@@ -161,6 +162,39 @@ class JSONSQLDownloader:
         except (Exception, Error) as error:
             print("Error while connecting to PostgreSQL", error)
 
+    @classmethod
+    def check_existence(cls, table_name, id):
+        cursor = cls.connection.cursor()
+        cls.connection.commit()
+
+        cursor.execute(f"SELECT * FROM {table_name} WHERE hhid = {id}")
+        row = cursor.fetchone()
+
+        return row is not None
+
+    @classmethod
+    def delete_by_id(cls, table_name, id):
+        cursor = cls.connection.cursor()
+        cls.connection.commit()
+
+        cursor.execute(f"DELETE FROM {table_name} WHERE hhid = {id}")
+        cls.connection.commit()
+
+    @classmethod
+    def insert_sct(cls, vals):
+        cursor = cls.connection.cursor()
+        cls.connection.commit()
+
+        cursor.execute(f"SELECT * FROM skills_clear_test WHERE hhid = {vals[0]} and skill = '{vals[1]}'")
+        row = cursor.fetchone()
+
+        if row is None:
+            records_list_template = '(' + ','.join(['%s'] * len(vals)) + ')'
+            insert_query = 'INSERT INTO skills_clear_test VALUES {}'.format(records_list_template)
+
+            cursor.execute(insert_query, vals)
+            cls.connection.commit()
+
     def prep_vals(content):
         res = []
         bool_vals = ['premium', 'response_letter_required',
@@ -232,9 +266,6 @@ class JSONSQLDownloader:
                 new_type = datetime.strptime(val, date_format)
                 res.append(new_type)
 
-        # checking that new keys and vals are matching together
-        # res_dict = {k: v for k, v in zip(columns, res)}
-
         return res
 
     @classmethod
@@ -250,16 +281,105 @@ class JSONSQLDownloader:
         cursor = cls.connection.cursor()
         cls.connection.commit()
 
-        with open('C:\Work\VacanciesDashboard\etc\errors_in_vacj.json', 'r') as f:
-            errors = json.load(f)
-
         vals = cls.prep_vals(json_content)
+
         try:
-            cursor.execute(f"SELECT EXISTS (SELECT * FROM vacancy WHERE hhid = {json_content['id']});")
+            if not cls.check_existence('vacancy', json_content['id']):
+                cursor.execute(cls.insert_query, vals)
+        except KeyError:
+            Logger.error(f"Wrong JSON {json_content}")
         except Exception as e:
-            errors.append((str(e), path))
-            with open('C:\Work\VacanciesDashboard\etc\errors_in_vacj.json', 'w') as f:
-                json.dump(errors, f, indent=4)
-            return
-        if not cursor.fetchall()[0][0]:
-            cursor.execute(cls.insert_query, vals)
+            Logger.error(f"Unexcepted error {e}")
+
+    @classmethod
+    def update_mv(cls):
+        cursor = cls.connection.cursor()
+
+        for mw in ['mw1', 'skills', 'specs']:
+
+            cursor.execute(f"REFRESH MATERIALIZED VIEW {mw}")
+            cursor.execute(f"SELECT count(*) FROM {mw}")
+            row = cursor.fetchone()
+            Logger.warning(f"{mw} refreshed, {row[0]} rows in material view now.")
+
+        cls.connection.commit()
+        
+    @classmethod
+    def update_active(cls, arr):
+        cls.connect_to_db()
+        cursor = cls.connection.cursor()
+
+        try:            
+            # Сначала установим значение FALSE для всех строк
+            update_all_query = "UPDATE vacancy SET not_archived = FALSE WHERE not_archived = TRUE"
+            cursor.execute(update_all_query)
+            cls.connection.commit()
+            
+            Logger.warning("Значения во всех строках обновлены на FALSE.")
+            
+            # Проходимся по массиву ID и устанавливаем значение TRUE для каждой строки
+            total = 0
+            for row_id in arr:
+                total += 1
+                update_query = f"UPDATE vacancy SET not_archived = TRUE WHERE hhid = {row_id}"
+                cursor.execute(update_query)
+                cls.connection.commit()
+                if total % 10000 == 0:
+                    Logger.warning(f"{total} Значение в строке с ID {row_id} обновлено на TRUE.")
+                else:
+                    Logger.info(f"{total} Значение в строке с ID {row_id} обновлено на TRUE.")
+
+            Logger.warning(f"{total} Значение в строке с ID {row_id} обновлено на TRUE.")
+
+            for mw in ['vacancies_active', 'skills_active', 'specs_active', 'archived_vacancy_status']:
+                cursor.execute(f"REFRESH MATERIALIZED VIEW {mw}")
+                cursor.execute(f"SELECT count(*) FROM {mw}")
+                row = cursor.fetchone()
+                Logger.warning(f"{mw} refreshed, {row[0]} rows in material view now.")
+            
+        except (Exception, psycopg2.Error) as error:
+            print("Ошибка при работе с PostgreSQL:", error)
+            
+        finally:
+            # Закрытие курсора и соединения
+            if cursor:
+                cursor.close()
+            if cls.connection:
+                cls.connection.commit()
+                cls.connection.close()
+
+    @classmethod
+    def get_all_from_skills_active(cls):
+        cls.connect_to_db()
+        cursor = cls.connection.cursor()
+
+        cursor.execute('SELECT * FROM skills_active')
+        rows = cursor.fetchall()
+
+        return rows
+
+    @classmethod
+    def get_all_from_skills(cls):
+        cls.connect_to_db()
+        cursor = cls.connection.cursor()
+
+        cursor.execute('SELECT * FROM skills')
+        rows = cursor.fetchall()
+
+        return rows
+
+    @classmethod
+    def get_vacancy_names(cls):
+        cls.connect_to_db()
+        cls.cursor = cls.connection.cursor()
+
+        cls.cursor.execute('SELECT id_, vacancy_name_ FROM mw1')
+        rows = cls.cursor.fetchall()
+
+        return rows
+
+    @classmethod
+    def update_vacancy_name(cls, name):
+        query = f"UPDATE mw1 SET vacancy_name_ = '{name[2]}' WHERE id_ = {name[0]}"
+        cls.cursor.execute(query)
+        cls.connection.commit()
