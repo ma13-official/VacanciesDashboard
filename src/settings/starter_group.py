@@ -1,31 +1,31 @@
 import sys
 import datetime
 
-
-
-sys.path.append('C:\Work\VacanciesDashboard\src')
+sys.path.append('/home/collector/VacanciesDashboard/src')
 
 from time import perf_counter as pc
 from logic.vacancies import Vacancies
 from logic.logger import Logger
 from logic.jsons import JSONs
-
+from logic.id_storage import IdStorage
+from logic.parse_the_desc import Connecter
 
 def start():
     """
     :return: запуск приложения
     """
     number_of_days = 1
-    start = pc()
+    today = datetime.date.today()
     Logger.create()
-    for i in range(22, 26):
-        Vacancies().check_all(number_of_days, now=datetime.datetime(2023, 6, i))
-    # try:
-    #     JSONs.json_upload(number_of_days)
-    # except Exception as e:s
-    #     Logger.error(e)
+    st = pc()
+    try:
+        Vacancies().check_all(number_of_days, now=today)
+        ids = JSONs.json_upload(number_of_days, today=today)
+        Connecter.parse_skills(skills = ids)
+    except Exception as e:
+        Logger.error(e)
     Logger.save()
-    Logger.info(f"Program works {round(pc() - start)//60} minutes and {round(pc() - start)%60} seconds")
+    Logger.warning(f"Program works {round(pc() - st)//60} minutes and {round(pc() - st)%60} seconds")
 
 
 start()

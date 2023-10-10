@@ -167,3 +167,5 @@ vacancies.json
 
 Pipfile
 Pipfile.lock
+
+deprecated/

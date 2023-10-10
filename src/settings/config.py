@@ -1,8 +1,8 @@
 import json, os
 
-path = 'C:\Work\VacanciesDashboard'
+path = '/home/collector/VacanciesDashboard'
 
-with open(path + '\src\settings\config.json') as config:
+with open(path + '/src/settings/config.json') as config:
     config = json.load(config)
 
 
@@ -11,6 +11,7 @@ class Local:
 
     path = local['path']
     logs_path = path + local['logs_path']
+    archive_logs_path = path + local['archive_logs_path']
     single_jsons_path = path + local['single_jsons_path']
     group_jsons_path = path + local['group_jsons_path']
     vacancies_json_path = path + local['vacancies_json']
@@ -33,6 +34,7 @@ class S3Paths:
     bucket = s3['bucket']
     profile = s3['profile']
     vacancies_json_path = path + s3['vacancies_json']
+    not_archive_path = path + s3['not_archive']
 
 
 class VacanciesPaths:
@@ -50,7 +52,7 @@ class LoggerSettings:
     default = logger['default']
 
 
-for path in [Local.logs_path, Local.single_jsons_path, Local.group_jsons_path, Local.errors_path, Local.captcha,
+for path in [Local.logs_path, Local.archive_logs_path, Local.single_jsons_path, Local.group_jsons_path, Local.errors_path, Local.captcha,
              Local.unexpected_error, Local.captcha_images, LoggerSettings.default]:
     if not os.path.exists(path):
         os.makedirs(path)

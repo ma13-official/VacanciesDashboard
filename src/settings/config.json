@@ -1,7 +1,8 @@
 {
     "local": {
-        "path": "C:/Work/VacanciesDashboard/",
+        "path": "/home/collector/VacanciesDashboard/",
         "logs_path": "etc/logs/",
+        "archive_logs_path": "etc/archive_logs/",
         "single_jsons_path": "etc/single_jsons/",
         "group_jsons_path": "etc/group_jsons/",
         "errors_path": "etc/errors/",
@@ -16,11 +17,13 @@
     "s3":{
         "path": "hh.ru/",
         "logs_path": "logs/",
+        "archive_logs_path": "archive_logs/",
         "vacancies_jsons_path": "vacancies_jsons/",
         "group_jsons_path": "group_jsons/",
         "bucket": "data-brains-bucket",
         "profile": "default",
-        "vacancies_json": "vacancies.json"
+        "vacancies_json": "vacancies.json", 
+        "not_archive": "not_archive_jsons/"
     },
     "vacancies":{
         "start":{

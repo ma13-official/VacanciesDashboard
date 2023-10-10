@@ -1,1 +1,0 @@
-captcha - every 120 requests
