@@ -56,10 +56,16 @@ class Connecter:
         for skill in skills:
 
             count += 1
-            if count % 1000 == 0:
-                Logger.warning(skill)
-            elif count % 100 == 0:
-                Logger.info(skill)
+            if len(skills) > 100000:
+                if count % 10000 == 0:
+                    Logger.warning(skill)
+                elif count % 1000 == 0:
+                    Logger.info(skill)
+            else:
+                if count % 1000 == 0:
+                    Logger.warning(skill)
+                elif count % 100 == 0:
+                    Logger.info(skill)
 
             bar.next()
             if JSONSQLDownloader.check_existence('skills_clear_test', skill[0]):

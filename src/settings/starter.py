@@ -10,6 +10,7 @@ from logic.jsons import JSONs
 from logic.id_storage import IdStorage
 from logic.json_sql_loader import JSONSQLDownloader
 from logic.parse_the_desc import Connecter
+from logic.update_exchange_rates import update_exchange_rates
 
 def start():
     """
@@ -28,6 +29,7 @@ def start():
     ids = JSONs.upload_from_arr(vacancies_ids, date)
     JSONSQLDownloader.update_active(vacancies_ids)
     Connecter.parse_skills(skills = ids)
+    update_exchange_rates()
     
     Logger.save()
     Logger.warning(f"Program works {round(pc() - start)//60} minutes and {round(pc() - start)%60} seconds")

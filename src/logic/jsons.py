@@ -75,7 +75,7 @@ class JSONs:
             key = (today - timedelta(days=1 + i)).strftime('%Y-%m-%d')
             arr = vacancies_dict[key]
             JSONs.make_dir(f'{Local.group_jsons_path}', key)
-            Logger.warning_check_all(f"{key} started uploading, {len(arr)} JSONs founded")
+            Logger.warning(f"{key} started uploading, {len(arr)} JSONs founded")
             cur_not_founded = 0
             for value in arr:
                 total += 1
@@ -87,14 +87,14 @@ class JSONs:
                     not_founded += 1
                     cur_not_founded += 1
                     if not_founded % 100 == 0:
-                        Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                        Logger.warning(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                     else:
-                        Logger.info_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                        Logger.info(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                     JSONs.upload_single_jsons(url, key, value)
                     values.append(value)
                     
                 print(total, founded, not_founded, end='\r', flush=True)
-            Logger.warning_upload(f"{key} uploaded, {cur_not_founded} JSONs downloaded")
+            Logger.warning(f"{key} uploaded, {cur_not_founded} JSONs downloaded")
 
         JSONSQLDownloader.update_mv()
         
@@ -109,7 +109,7 @@ class JSONs:
         founded, not_founded, total = 0, 0, 0
         values = []
 
-        Logger.warning_check_all(f"Upload started, {len(arr)} JSONs founded")
+        Logger.warning(f"Upload started, {len(arr)} JSONs founded")
         cur_not_founded = 0
         for value in arr:
 
@@ -122,13 +122,13 @@ class JSONs:
                 not_founded += 1
                 cur_not_founded += 1
                 if not_founded % 100 == 0:
-                    Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                    Logger.warning(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                 else:
-                    Logger.info_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+                    Logger.info(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
                 JSONs.upload_single_jsons(url, key, value)
                 values.append(value)
                 
-        Logger.warning_check_all(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
+        Logger.warning(f'{value} {founded+not_founded} {not_founded} {founded} {pc() - start}')
 
         return values
 

@@ -62,12 +62,12 @@ class Vacancies:
         vacancies = self.C.connect(query, params)
 
         founded = vacancies['found']
-        Logger.warning_check_all(f"Founded {founded} vacancies")
+        Logger.warning(f"Founded {founded} vacancies")
         if founded > 2000:
             self.separating_by_days(query, params, today, days)
         else:
             self.check_pages(query, params)
-            Logger.warning_check_all(f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
+            Logger.warning(f"From {params['date_from']} to {params['date_to']} founded less than 2000 vacancies!")
 
     def separating_by_days(self, query, params, today, days):
         """
@@ -86,7 +86,7 @@ class Vacancies:
             vacancies = self.C.connect(query, params)
 
             founded = vacancies['found']
-            Logger.warning_check_all(f"{params['date_from'][:10]} founded {founded} vacancies")
+            Logger.warning(f"{params['date_from'][:10]} founded {founded} vacancies")
             cur_day = today - datetime.timedelta(days=days_ago)
             if founded > 2000:
                 self.separating_by_hours(query, cur_day)
@@ -177,7 +177,7 @@ class Vacancies:
         params['page'] = None
         vacancies = self.C.connect(query, params)
         
-        Logger.info_check_all(
+        Logger.info(
             f"From {params['date_from']} to {params['date_to']} founded {vacancies['found']} vacancies")
         try:
             pages = vacancies['found'] // 100

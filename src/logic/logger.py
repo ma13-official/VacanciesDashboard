@@ -47,22 +47,9 @@ class Logger:
     def info(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.info(message)
-            Logger.detailed_upload_logger.info(message)
-
-    @staticmethod
-    def info_check_all(message):
-        if Logger.detailed:
-            Logger.detailed_check_all_logger.info(message)
 
     @staticmethod
     def warning(message):
-        if Logger.detailed:
-            Logger.warning_check_all(message)
-        if Logger.default:
-            Logger.check_all_logger.warning(message)
-
-    @staticmethod
-    def warning_check_all(message):
         if Logger.detailed:
             Logger.detailed_check_all_logger.warning(message)
         if Logger.default:

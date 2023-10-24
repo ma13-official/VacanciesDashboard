@@ -18,7 +18,7 @@ class IdStorage:
             json.dump(dict(sorted(vacancies_dict.items())), file, indent=4)
 
         vacancies = sum([len(sub) for sub in vacancies_dict.values()])
-        Logger.info_check_all(f"{vacancies} vacancies in vacancies_dict.json now.")
+        Logger.info(f"{vacancies} vacancies in vacancies_dict.json now.")
 
     @staticmethod
     def static_adding(dir, vacancies_dict, get_30_days=False):
@@ -43,7 +43,7 @@ class IdStorage:
                     for item in json_data['items']:
                         data.append(item['id'])
                 except:
-                    Logger.info_check_all(str(json_data))
+                    Logger.info(str(json_data))
 
             continuation_token = objects.get("NextContinuationToken")
             if not continuation_token:
@@ -61,7 +61,7 @@ class IdStorage:
             json.dump(dict(sorted(cls.vacancies_dict.items())), file, indent=4)
 
         vacancies = sum([len(sub) for sub in cls.vacancies_dict.values()])
-        Logger.info_check_all(f"{vacancies} vacancies in vacancies_dict.json now.")
+        Logger.info(f"{vacancies} vacancies in vacancies_dict.json now.")
 
     @classmethod
     def adding(cls, dir):
@@ -83,7 +83,7 @@ class IdStorage:
                     for item in json_data['items']:
                         data.append(item['id'])
                 except:
-                    Logger.info_check_all(str(json_data))
+                    Logger.info(str(json_data))
 
             continuation_token = objects.get("NextContinuationToken")
             if not continuation_token:
