@@ -331,14 +331,17 @@ class JSONSQLDownloader:
 
             Logger.warning(f"{total} Значение в строке с ID {row_id} обновлено на TRUE.")
 
-            for mw in ['vacancies_active', 'skills_active', 'specs_active', 'archived_vacancy_status']:
+            #   'vacancies_active', 'skills_active', 'specs_active', 
+            #   не обновляем эти view, поскольку они не используются
+            
+            for mw in ['archived_vacancy_status']:
                 cursor.execute(f"REFRESH MATERIALIZED VIEW {mw}")
                 cursor.execute(f"SELECT count(*) FROM {mw}")
                 row = cursor.fetchone()
                 Logger.warning(f"{mw} refreshed, {row[0]} rows in material view now.")
             
         except (Exception, psycopg2.Error) as error:
-            print("Ошибка при работе с PostgreSQL:", error)
+            Logger.error("Ошибка при работе с PostgreSQL:" + str(error))
             
         finally:
             # Закрытие курсора и соединения

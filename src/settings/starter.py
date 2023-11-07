@@ -1,5 +1,5 @@
 import sys
-import datetime
+import datetime, json
 
 sys.path.append('/home/collector/VacanciesDashboard/src')
 
@@ -28,10 +28,21 @@ def start():
 
     ids = JSONs.upload_from_arr(vacancies_ids, date)
     JSONSQLDownloader.update_active(vacancies_ids)
-    Connecter.parse_skills(skills = ids)
+    Connecter.parse_skills(skills=ids)
     update_exchange_rates()
     
     Logger.save()
     Logger.warning(f"Program works {round(pc() - start)//60} minutes and {round(pc() - start)%60} seconds")
+
+    # with open('/home/collector/VacanciesDashboard/skills.json', 'r') as file:
+    #     replacements = json.load(file)
+
+    # JSONSQLDownloader.connect_to_db()
+    # cur = JSONSQLDownloader.connection.cursor()
+    
+    # for old_word, new_word in replacements.items():
+    # cur.execute(f"UPDATE skills_clear_test SET skill = REPLACE(skill, %s, %s)", (old_word, new_word))
+    # cur.execute('SELECT * FROM skills_clear_test')
+    # print(cur.fetchall())  
 
 start()

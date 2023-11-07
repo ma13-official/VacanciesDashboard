@@ -13,20 +13,10 @@ from progress.bar import IncrementalBar
 class Connecter:
     dataset = []
 
-    def parse_the_csv():
-        csv_filename = "/home/collector/VacanciesDashboard/skills_sorted.csv"
-        result_list = []
-
-        with open(csv_filename, "r", encoding='latin-1') as csv_file:
-            for row in csv_file.readlines():
-                if row[-1] == '\n':
-                    result_list.append(row[:-1])
-                else:
-                    result_list.append(row)
-                
-        result_list[1] = 'форсайт'
-
-        return result_list
+    def get_skills():
+        with open('/home/collector/VacanciesDashboard/skills.json', 'r') as file:
+            data = json.load(file)
+        return data
 
     def parse_skills(skills = JSONSQLDownloader.get_all_from_skills()):
 
@@ -47,7 +37,7 @@ class Connecter:
         Logger.warning(f'Skills {len(skills)}')
 
         # keywords = Connecter.extract_values('awesome.json')
-        keywords = Connecter.parse_the_csv()
+        keywords = Connecter.get_skills()
         Logger.warning(f'Keywords {len(keywords)}')
 
         bar = IncrementalBar('Parsing', max = len(skills))
@@ -73,7 +63,7 @@ class Connecter:
         
             arrays = []
 
-            for keyword in keywords:
+            for keyword in list(keywords.keys()):
                 if keyword in ['c', 'r']:
                     res = find_letter_without_latin_neighbors(skill[1], keyword)
                     if res is not None:
@@ -98,9 +88,14 @@ class Connecter:
 
             for i in arrays:
                 if [skill[0], i] not in Connecter.dataset:
-                    Connecter.dataset.append([skill[0], i, skill[1]])
+                    if i == 'c #' or i == 'sharp':
+                        i = 'c#'
+                    try:
+                        Connecter.dataset.append([skill[0], keywords[i], skill[1]])
+                    except KeyError as e:
+                        Logger.error(f'{e}')
 
-        Connecter.save(Connecter.dataset)
+        # Connecter.save(Connecter.dataset)
         Connecter.update_skills_clean()
         Logger.warning('Skills parsed')
 
